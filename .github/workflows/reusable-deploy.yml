@@ -1,5 +1,7 @@
 name: Reusable Deploy
 
+# Generic Helm deployment workflow for EKS-backed applications.
+
 on:
   workflow_call:
     inputs:

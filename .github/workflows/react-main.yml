@@ -1,5 +1,7 @@
 name: React Main
 
+# Production promotion flow for React web applications.
+
 on:
   push:
     branches:
@@ -71,6 +73,35 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
             --paths "/*"
+
+      - name: Validate security headers
+        shell: bash
+        env:
+          REACT_SITE_URL: ${{ vars.REACT_SITE_URL }}
+        run: |
+          headers="$(curl -fsSI "${REACT_SITE_URL}")"
+          printf '%s\n' "${headers}" | grep -qi '^strict-transport-security:' || exit 1
+          printf '%s\n' "${headers}" | grep -qi '^content-security-policy:' || exit 1
+          printf '%s\n' "${headers}" | grep -qi '^x-content-type-options:' || exit 1
+
+      - name: ZAP baseline scan
+        shell: bash
+        env:
+          REACT_SITE_URL: ${{ vars.REACT_SITE_URL }}
+        run: |
+          docker run --rm \
+            -t owasp/zap2docker-stable \
+            zap-baseline.py \
+            -t "${REACT_SITE_URL}" \
+            -r zap-baseline-report.html
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-report
+          path: zap-baseline-report.html
+          if-no-files-found: error
+          retention-days: 14
 
   notify:
     needs: deploy

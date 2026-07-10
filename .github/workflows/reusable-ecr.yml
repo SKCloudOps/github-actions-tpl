@@ -1,5 +1,7 @@
 name: Reusable ECR Login
 
+# Establishes AWS identity and returns the target ECR registry host.
+
 on:
   workflow_call:
     inputs:
@@ -40,4 +42,3 @@ jobs:
       - name: Login to Amazon ECR
         id: login
         uses: aws-actions/amazon-ecr-login@v2
-

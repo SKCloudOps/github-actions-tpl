@@ -14,8 +14,10 @@ This repository uses placeholders everywhere so consuming teams can replace valu
 - `<K8S_NAMESPACE>`
 - `<S3_BUCKET>`
 - `<CLOUDFRONT_DISTRIBUTION_ID>`
+- `<REACT_SITE_URL>`
 - `<HELM_RELEASE_NAME>`
 - `<HELM_CHART_PATH>`
+- `<SMOKE_TEST_URL>`
 - `<GITHUB_ORG>`
 - `<GITHUB_REPOSITORY>`
 - `<GITOPS_REPOSITORY>`

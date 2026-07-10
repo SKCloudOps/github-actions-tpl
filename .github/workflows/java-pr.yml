@@ -1,5 +1,7 @@
 name: Java PR
 
+# Pull request validation for Spring Boot services.
+
 on:
   pull_request:
     branches:
@@ -37,4 +39,3 @@ jobs:
       sonar_project_key: ${{ vars.SONAR_PROJECT_KEY }}
       checkmarx_project_name: ${{ vars.CHECKMARX_PROJECT_NAME }}
     secrets: inherit
-

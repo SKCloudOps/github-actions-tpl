@@ -1,5 +1,7 @@
 name: Reusable Docker
 
+# Builds and optionally pushes container images to the target registry.
+
 on:
   workflow_call:
     inputs:

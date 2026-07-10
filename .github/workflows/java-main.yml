@@ -1,5 +1,7 @@
 name: Java Main
 
+# Mainline promotion flow for Spring Boot services.
+
 on:
   push:
     branches:
@@ -67,8 +69,25 @@ jobs:
       push: true
     secrets: inherit
 
-  gitops:
+  sign:
     needs: docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sign image
+        uses: ./actions/cosign
+        with:
+          image_ref: ${{ needs.docker.outputs.image_uri }}
+
+  gitops:
+    needs: sign
+    environment: production
     uses: ./.github/workflows/reusable-argocd.yml
     with:
       gitops_repo_url: ${{ vars.GITOPS_REPOSITORY }}
@@ -77,4 +96,29 @@ jobs:
       image_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' && inputs.image_tag || github.sha }}
       argocd_server: ${{ vars.ARGOCD_SERVER }}
       argocd_app_name: ${{ vars.ARGOCD_APP_NAME }}
+    secrets: inherit
+
+  smoke_test:
+    needs: gitops
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Smoke test
+        shell: bash
+        env:
+          SMOKE_TEST_URL: ${{ vars.SMOKE_TEST_URL }}
+        run: bash scripts/smoke-test.sh
+
+  notify:
+    needs: smoke_test
+    uses: ./.github/workflows/reusable-notification.yml
+    with:
+      message: Java production deployment completed for ${{ github.sha }}
+      status: success
+      slack_channel: ${{ vars.SLACK_CHANNEL }}
     secrets: inherit

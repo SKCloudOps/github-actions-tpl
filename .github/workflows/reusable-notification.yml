@@ -1,5 +1,7 @@
 name: Reusable Notification
 
+# Sends a consistent deployment notification to chat destinations.
+
 on:
   workflow_call:
     inputs:
@@ -47,4 +49,3 @@ jobs:
           webhook_url: ${{ secrets.teams_webhook_url }}
           message: ${{ inputs.message }}
           status: ${{ inputs.status }}
-

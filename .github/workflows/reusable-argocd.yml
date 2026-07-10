@@ -1,5 +1,7 @@
 name: Reusable ArgoCD
 
+# Updates GitOps manifests and requests an ArgoCD sync.
+
 on:
   workflow_call:
     inputs:

@@ -1,5 +1,7 @@
 name: Release
 
+# Creates a tagged GitHub release from the selected version.
+
 on:
   workflow_dispatch:
     inputs:

@@ -1,5 +1,7 @@
 name: Reusable Build
 
+# Shared build orchestration for Java and React workloads.
+
 on:
   workflow_call:
     inputs:
@@ -97,4 +99,3 @@ jobs:
           path: ${{ inputs.artifact_path }}
           if-no-files-found: error
           retention-days: 14
-

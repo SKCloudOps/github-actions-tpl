@@ -1,5 +1,7 @@
 name: Rollback
 
+# Restores a previous release by promoting an earlier GitOps image tag.
+
 on:
   workflow_dispatch:
     inputs:

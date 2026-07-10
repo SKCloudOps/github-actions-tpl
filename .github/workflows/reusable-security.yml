@@ -1,5 +1,7 @@
 name: Reusable Security
 
+# Parallel security checks used by both PR and mainline pipelines.
+
 on:
   workflow_call:
     inputs:
