@@ -25,7 +25,6 @@ permissions:
 
 jobs:
   rollback:
-    environment: ${{ inputs.environment }}
     uses: ./.github/workflows/reusable-argocd.yml
     with:
       gitops_repo_url: ${{ vars.GITOPS_REPOSITORY }}
@@ -34,4 +33,5 @@ jobs:
       image_tag: ${{ inputs.previous_image_tag }}
       argocd_server: ${{ vars.ARGOCD_SERVER }}
       argocd_app_name: ${{ vars.ARGOCD_APP_NAME }}
+      environment: ${{ inputs.environment }}
     secrets: inherit

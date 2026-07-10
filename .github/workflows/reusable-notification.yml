@@ -32,20 +32,26 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
+      TEAMS_WEBHOOK_URL: ${{ secrets.teams_webhook_url }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Slack
-        if: ${{ secrets.slack_webhook_url != '' }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         uses: ./actions/slack
         with:
-          webhook_url: ${{ secrets.slack_webhook_url }}
+          webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
           channel: ${{ inputs.slack_channel }}
           message: ${{ inputs.message }}
           status: ${{ inputs.status }}
 
       - name: Teams
-        if: ${{ secrets.teams_webhook_url != '' }}
+        if: ${{ env.TEAMS_WEBHOOK_URL != '' }}
         uses: ./actions/teams
         with:
-          webhook_url: ${{ secrets.teams_webhook_url }}
+          webhook_url: ${{ env.TEAMS_WEBHOOK_URL }}
           message: ${{ inputs.message }}
           status: ${{ inputs.status }}

@@ -30,6 +30,11 @@ on:
         description: ArgoCD application name.
         required: true
         type: string
+      environment:
+        description: GitHub environment name.
+        required: false
+        default: production
+        type: string
     secrets:
       gitops_token:
         required: true
@@ -41,6 +46,7 @@ jobs:
     name: Update GitOps
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: ${{ inputs.environment }}
     permissions:
       contents: read
     steps:

@@ -2,7 +2,7 @@ name: Trivy Scan
 description: Run filesystem or image vulnerability scans with Trivy.
 inputs:
   scan_type:
-    description: `fs` or `image`.
+    description: "`fs` or `image`."
     required: true
   scan_target:
     description: File system path or image reference.
@@ -37,4 +37,3 @@ runs:
         severity: ${{ inputs.severity }}
         exit-code: "1"
         ignore-unfixed: true
-
