@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1250" viewBox="0 0 2000 1250" role="img" aria-labelledby="title desc">
+  <title id="title">Enterprise GitHub Actions reference architecture</title>
+  <desc id="desc">An enterprise delivery architecture showing governed GitHub source control and reusable workflows, security and supply-chain controls, AWS OIDC identity, GitOps deployment to EKS, React delivery to S3 and CloudFront, evidence reporting, notifications, and rollback.</desc>
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#f1f5f9"/></linearGradient>
+    <linearGradient id="gh" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4338ca"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+    <linearGradient id="aws" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#075985"/><stop offset="1" stop-color="#0f766e"/></linearGradient>
+    <linearGradient id="gitops" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#047857"/><stop offset="1" stop-color="#16a34a"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#0f172a" flood-opacity=".11"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#52677f"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#07865d"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/></marker>
+    <style>
+      .heading{font:700 38px Arial,sans-serif;fill:#0f172a}.sub{font:400 18px Arial,sans-serif;fill:#475569}.zone{fill:#fff;stroke:#cbd5e1;stroke-width:2}.zone-title{font:700 18px Arial,sans-serif;fill:#334155;letter-spacing:1.4px}.zone-caption{font:400 14px Arial,sans-serif;fill:#64748b}.cap{font:700 14px Arial,sans-serif;fill:#fff;letter-spacing:.7px}.cap-sub{font:400 12px Arial,sans-serif;fill:#dbeafe}.node{stroke-width:2}.node-title{font:700 18px Arial,sans-serif;fill:#0f172a}.node-sub{font:400 14px Arial,sans-serif;fill:#475569}.small{font:600 13px Arial,sans-serif;fill:#475569}.tiny{font:400 12px Arial,sans-serif;fill:#64748b}.flow{stroke:#52677f;stroke-width:3;fill:none;marker-end:url(#arrow)}.flow-green{stroke:#07865d;stroke-width:3.5;fill:none;marker-end:url(#arrow-green)}.flow-amber{stroke:#b45309;stroke-width:3;fill:none;marker-end:url(#arrow-amber)}.dashed{stroke-dasharray:8 7}.govern{fill:#eef2ff;stroke:#6366f1}.workflow{fill:#eff6ff;stroke:#3b82f6}.security{fill:#fffbeb;stroke:#d97706}.identity{fill:#ecfeff;stroke:#0891b2}.artifact{fill:#f5f3ff;stroke:#7c3aed}.delivery{fill:#f0fdf4;stroke:#16a34a}.ops{fill:#fdf2f8;stroke:#db2777}.note{fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5}.tag{font:700 12px Arial,sans-serif;fill:#fff}.legend{font:600 13px Arial,sans-serif;fill:#334155}
+    </style>
+  </defs>
+
+  <rect width="2000" height="1250" fill="url(#page)" rx="30"/>
+  <text class="heading" x="60" y="64">Enterprise GitHub Actions Reference Architecture</text>
+  <text class="sub" x="60" y="96">Governed reusable CI/CD with supply-chain security, federated cloud access, GitOps promotion, and operational feedback</text>
+
+  <!-- Governance -->
+  <rect class="zone" x="48" y="130" width="1904" height="166" rx="20" filter="url(#shadow)"/>
+  <rect x="48" y="130" width="250" height="166" rx="20" fill="url(#gh)"/>
+  <text class="cap" x="78" y="170">GOVERNANCE PLANE</text><text class="cap-sub" x="78" y="196">GitHub Enterprise controls</text>
+  <rect class="node govern" x="348" y="168" width="260" height="90" rx="14"/>
+  <text class="node-title" x="416" y="205">Developers</text><text class="node-sub" x="379" y="230">PRs, releases, dispatches</text>
+  <rect class="node govern" x="704" y="168" width="290" height="90" rx="14"/>
+  <text class="node-title" x="766" y="205">Source Governance</text><text class="node-sub" x="737" y="230">branch protection · reviews</text>
+  <rect class="node govern" x="1090" y="168" width="305" height="90" rx="14"/>
+  <text class="node-title" x="1142" y="205">Environment Controls</text><text class="node-sub" x="1121" y="230">approvals · scoped secrets</text>
+  <rect class="node govern" x="1491" y="168" width="385" height="90" rx="14"/>
+  <text class="node-title" x="1584" y="205">Configuration</text><text class="node-sub" x="1530" y="230">repository variables · GitHub secrets</text>
+  <path class="flow" d="M608 213 H704"/><path class="flow" d="M994 213 H1090"/><path class="flow" d="M1395 213 H1491"/>
+
+  <!-- CI platform -->
+  <rect class="zone" x="48" y="328" width="1190" height="540" rx="20" filter="url(#shadow)"/>
+  <rect x="48" y="328" width="1190" height="50" rx="20" fill="url(#gh)"/><rect x="48" y="358" width="1190" height="20" fill="url(#gh)"/>
+  <text class="cap" x="78" y="361">GITHUB ACTIONS DELIVERY PLATFORM</text>
+  <text class="zone-caption" x="334" y="361">reusable workflows and local composite actions</text>
+
+  <rect class="node workflow" x="86" y="425" width="225" height="110" rx="14"/>
+  <text class="node-title" x="142" y="463">Event Routes</text><text class="node-sub" x="115" y="490">Java PR · React PR</text><text class="node-sub" x="105" y="511">main · release · rollback</text>
+  <rect class="node workflow" x="388" y="425" width="265" height="110" rx="14"/>
+  <text class="node-title" x="446" y="463">Reusable Build</text><text class="node-sub" x="418" y="490">Java 21 / Node 20</text><text class="node-sub" x="416" y="511">tests · cached dependencies</text>
+  <rect class="node security" x="730" y="410" width="320" height="140" rx="14"/>
+  <text class="node-title" x="808" y="448">Security Gate</text><text class="node-sub" x="764" y="475">Gitleaks · SonarQube · Checkmarx</text><text class="node-sub" x="774" y="497">Trivy · Syft · SARIF / SBOM</text><text class="node-sub" x="777" y="519">fail on configured thresholds</text>
+  <rect class="node artifact" x="1092" y="425" width="106" height="110" rx="14"/>
+  <text class="node-title" x="1114" y="465">Build</text><text class="node-title" x="1102" y="488">artifact</text><text class="node-sub" x="1116" y="511">14 days</text>
+  <path class="flow" d="M311 480 H388"/><path class="flow" d="M653 480 H730"/><path class="flow" d="M1050 480 H1092"/>
+  <text class="small" x="675" y="465">parallel validation</text>
+
+  <rect class="note" x="86" y="617" width="1112" height="202" rx="14"/>
+  <text class="zone-title" x="114" y="653">CONTROLLED PROMOTION PATHS</text>
+  <rect class="node workflow" x="120" y="680" width="260" height="102" rx="12"/>
+  <text class="node-title" x="179" y="719">Java Main</text><text class="node-sub" x="147" y="744">build + security + image</text><text class="node-sub" x="150" y="765">GitOps production promotion</text>
+  <rect class="node workflow" x="478" y="680" width="260" height="102" rx="12"/>
+  <text class="node-title" x="535" y="719">React Main</text><text class="node-sub" x="506" y="744">build + security + static</text><text class="node-sub" x="506" y="765">site deployment and DAST</text>
+  <rect class="node ops" x="836" y="680" width="320" height="102" rx="12"/>
+  <text class="node-title" x="901" y="719">Release &amp; Rollback</text><text class="node-sub" x="874" y="744">tagged release / previous image</text><text class="node-sub" x="889" y="765">environment-aware execution</text>
+  <path class="flow" d="M250 535 V617"/><path class="flow" d="M520 535 V617"/><path class="flow" d="M909 550 V617"/>
+
+  <!-- AWS & GitOps -->
+  <rect class="zone" x="1272" y="328" width="680" height="540" rx="20" filter="url(#shadow)"/>
+  <rect x="1272" y="328" width="680" height="50" rx="20" fill="url(#aws)"/><rect x="1272" y="358" width="680" height="20" fill="url(#aws)"/>
+  <text class="cap" x="1302" y="361">CLOUD &amp; GITOPS DELIVERY PLANE</text>
+  <rect class="node identity" x="1306" y="424" width="274" height="103" rx="14"/>
+  <text class="node-title" x="1361" y="462">GitHub OIDC</text><text class="node-sub" x="1338" y="487">short-lived credentials</text><text class="node-sub" x="1352" y="508">no static AWS keys</text>
+  <rect class="node identity" x="1644" y="424" width="270" height="103" rx="14"/>
+  <text class="node-title" x="1703" y="462">AWS IAM Role</text><text class="node-sub" x="1674" y="487">least-privilege access</text><text class="node-sub" x="1686" y="508">ECR / EKS / S3</text>
+  <path class="flow" d="M1580 475 H1644"/>
+  <rect class="node artifact" x="1306" y="590" width="274" height="106" rx="14"/>
+  <text class="node-title" x="1366" y="628">Amazon ECR</text><text class="node-sub" x="1338" y="653">container registry</text><text class="node-sub" x="1349" y="674">Cosign image signing</text>
+  <rect class="node delivery" x="1644" y="590" width="270" height="106" rx="14"/>
+  <text class="node-title" x="1696" y="628">GitOps Repository</text><text class="node-sub" x="1680" y="653">versioned image tags</text><text class="node-sub" x="1675" y="674">environment manifests</text>
+  <path class="flow" d="M1779 527 V560 H1443 V590"/><path class="flow-green" d="M1580 643 H1644"/>
+  <rect class="node delivery" x="1306" y="745" width="274" height="82" rx="14"/>
+  <text class="node-title" x="1380" y="780">ArgoCD</text><text class="node-sub" x="1345" y="806">syncs declared state</text>
+  <rect class="node delivery" x="1644" y="745" width="270" height="82" rx="14"/>
+  <text class="node-title" x="1721" y="780">Amazon EKS</text><text class="node-sub" x="1685" y="806">Helm / Kubernetes workloads</text>
+  <path class="flow-green" d="M1779 696 V720 H1443 V745"/><path class="flow-green" d="M1580 786 H1644"/>
+
+  <!-- Cross-cutting outcomes -->
+  <rect class="zone" x="48" y="902" width="1904" height="290" rx="20" filter="url(#shadow)"/>
+  <text class="zone-title" x="78" y="940">CROSS-CUTTING DELIVERY, EVIDENCE &amp; OPERATIONS</text>
+  <text class="zone-caption" x="78" y="965">Outputs are retained, governed, and fed back to delivery teams.</text>
+  <rect class="node artifact" x="90" y="1008" width="290" height="118" rx="14"/>
+  <text class="node-title" x="145" y="1048">Evidence &amp; Reports</text><text class="node-sub" x="129" y="1074">SARIF · SBOM · artifacts</text><text class="node-sub" x="135" y="1097">quality and scan findings</text>
+  <rect class="node delivery" x="472" y="1008" width="290" height="118" rx="14"/>
+  <text class="node-title" x="548" y="1048">React Web Delivery</text><text class="node-sub" x="514" y="1074">S3 static hosting · CloudFront</text><text class="node-sub" x="536" y="1097">security-header and ZAP checks</text>
+  <rect class="node ops" x="854" y="1008" width="290" height="118" rx="14"/>
+  <text class="node-title" x="914" y="1048">Post-deploy Checks</text><text class="node-sub" x="890" y="1074">smoke tests · deployment status</text><text class="node-sub" x="909" y="1097">production verification</text>
+  <rect class="node ops" x="1236" y="1008" width="290" height="118" rx="14"/>
+  <text class="node-title" x="1297" y="1048">Notifications</text><text class="node-sub" x="1284" y="1074">Slack / Teams webhooks</text><text class="node-sub" x="1272" y="1097">deployment outcome feedback</text>
+  <rect class="node security" x="1618" y="1008" width="290" height="118" rx="14"/>
+  <text class="node-title" x="1665" y="1048">Rollback Control</text><text class="node-sub" x="1650" y="1074">manual environment selection</text><text class="node-sub" x="1660" y="1097">re-promote previous image tag</text>
+  <path class="flow" d="M1050 480 V965 H235 V1008"/>
+  <path class="flow" d="M608 782 V930 H617 V1008"/>
+  <path class="flow-green" d="M1779 827 V950 H999 V1008"/>
+  <path class="flow" d="M1144 1067 H1236"/>
+  <path class="flow-amber dashed" d="M1618 1067 H1548 V643 H1644"/>
+  <text class="small" x="1490" y="1048">reconciliation path</text>
+
+  <!-- legend -->
+  <rect class="note" x="1330" y="20" width="620" height="42" rx="10"/>
+  <rect x="1350" y="34" width="16" height="16" rx="4" fill="#eff6ff" stroke="#3b82f6"/><text class="legend" x="1376" y="47">Workflow</text>
+  <rect x="1468" y="34" width="16" height="16" rx="4" fill="#fffbeb" stroke="#d97706"/><text class="legend" x="1494" y="47">Security</text>
+  <rect x="1580" y="34" width="16" height="16" rx="4" fill="#ecfeff" stroke="#0891b2"/><text class="legend" x="1606" y="47">Identity</text>
+  <rect x="1680" y="34" width="16" height="16" rx="4" fill="#f0fdf4" stroke="#16a34a"/><text class="legend" x="1706" y="47">Delivery</text>
+  <rect x="1792" y="34" width="16" height="16" rx="4" fill="#fdf2f8" stroke="#db2777"/><text class="legend" x="1818" y="47">Operations</text>
+</svg>

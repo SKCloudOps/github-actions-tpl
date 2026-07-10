@@ -6,21 +6,7 @@ This repository is designed to be copied or bootstrapped into new application re
 
 ## Architecture
 
-```mermaid
-flowchart TD
-  Dev[Developer] --> PR[Pull Request]
-  PR --> Build[Reusable Build Workflow]
-  PR --> Sec[Reusable Security Workflow]
-  Build --> Img[Reusable Docker Workflow]
-  Sec --> SARIF[SARIF / SBOM / Reports]
-  Img --> ECR[Amazon ECR]
-  ECR --> Sign[Cosign Signing]
-  Sign --> GitOps[GitOps Repository]
-  GitOps --> Argo[ArgoCD]
-  Argo --> EKS[Amazon EKS]
-  EKS --> Smoke[Smoke Tests]
-  Smoke --> Notify[Slack / Teams]
-```
+![GitHub Actions template architecture](docs/images/architecture.svg)
 
 ## Repository Layout
 
