@@ -18,6 +18,7 @@ permissions:
   contents: read
   id-token: write
   packages: write
+  security-events: write
 
 concurrency:
   group: java-main-${{ github.ref }}
