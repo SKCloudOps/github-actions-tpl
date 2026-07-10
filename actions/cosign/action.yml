@@ -1,0 +1,18 @@
+name: Cosign Sign
+description: Perform keyless image signing with Cosign.
+inputs:
+  image_ref:
+    description: Container image reference to sign.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3.8.0
+
+    - name: Sign image
+      shell: bash
+      env:
+        COSIGN_EXPERIMENTAL: "true"
+      run: cosign sign --yes "${{ inputs.image_ref }}"
+

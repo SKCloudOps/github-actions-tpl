@@ -1,0 +1,23 @@
+name: Syft SBOM
+description: Generate an SPDX JSON SBOM with Syft.
+inputs:
+  path:
+    description: Path to scan.
+    required: false
+    default: "."
+  output_file:
+    description: SBOM output file.
+    required: false
+    default: sbom.spdx.json
+runs:
+  using: composite
+  steps:
+    - name: Generate SBOM
+      shell: bash
+      run: |
+        docker run --rm \
+          -v "${GITHUB_WORKSPACE}:/workspace" \
+          anchore/syft:latest \
+          "dir:/workspace/${{ inputs.path }}" \
+          -o spdx-json > "${{ inputs.output_file }}"
+

@@ -1,0 +1,183 @@
+name: Reusable Security
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: Application language under scan.
+        required: true
+        type: string
+      working_directory:
+        description: Relative path to the application root.
+        required: false
+        default: "."
+        type: string
+      image_ref:
+        description: Fully qualified container image reference for image scans.
+        required: false
+        default: ""
+        type: string
+      sonar_host_url:
+        description: SonarQube server URL.
+        required: false
+        default: ""
+        type: string
+      sonar_project_key:
+        description: Sonar project key.
+        required: false
+        default: ""
+        type: string
+      sonar_project_base_dir:
+        description: Sonar project base directory.
+        required: false
+        default: "."
+        type: string
+      checkmarx_project_name:
+        description: Checkmarx application name.
+        required: false
+        default: ""
+        type: string
+      scan_target:
+        description: File system scan target for Trivy and Syft.
+        required: false
+        default: "."
+        type: string
+      trivy_severity:
+        description: Vulnerability severity threshold.
+        required: false
+        default: "CRITICAL,HIGH"
+        type: string
+    secrets:
+      sonar_token:
+        required: false
+      checkmarx_client_id:
+        required: false
+      checkmarx_client_secret:
+        required: false
+
+jobs:
+  secret_scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run secret scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --no-banner --source "${{ inputs.working_directory }}" --report-format sarif --report-path gitleaks.sarif
+
+      - name: Upload SARIF
+        if: ${{ always() && hashFiles('gitleaks.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
+
+  sonar:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    if: ${{ inputs.sonar_host_url != '' && inputs.sonar_project_key != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sonar analysis
+        uses: ./actions/sonar
+        with:
+          sonar_host_url: ${{ inputs.sonar_host_url }}
+          sonar_token: ${{ secrets.sonar_token }}
+          project_key: ${{ inputs.sonar_project_key }}
+          project_base_dir: ${{ inputs.sonar_project_base_dir }}
+
+  checkmarx:
+    name: Checkmarx One
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    if: ${{ inputs.checkmarx_project_name != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkmarx scan
+        uses: ./actions/checkmarx
+        with:
+          project_name: ${{ inputs.checkmarx_project_name }}
+          source_path: ${{ inputs.scan_target }}
+          client_id: ${{ secrets.checkmarx_client_id }}
+          client_secret: ${{ secrets.checkmarx_client_secret }}
+
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Filesystem scan
+        if: ${{ inputs.image_ref == '' }}
+        uses: ./actions/trivy
+        with:
+          scan_type: fs
+          scan_target: ${{ inputs.scan_target }}
+          severity: ${{ inputs.trivy_severity }}
+
+      - name: Image scan
+        if: ${{ inputs.image_ref != '' }}
+        uses: ./actions/trivy
+        with:
+          scan_type: image
+          scan_target: ${{ inputs.image_ref }}
+          severity: ${{ inputs.trivy_severity }}
+
+      - name: Upload Trivy SARIF
+        if: ${{ always() && hashFiles('trivy.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+
+  sbom:
+    name: SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate SBOM
+        uses: ./actions/syft
+        with:
+          path: ${{ inputs.scan_target }}
+          output_file: sbom.spdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+          if-no-files-found: error
+          retention-days: 14

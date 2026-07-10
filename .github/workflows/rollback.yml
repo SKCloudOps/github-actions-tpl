@@ -1,0 +1,35 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment.
+        required: true
+        type: choice
+        options:
+          - development
+          - qa
+          - uat
+          - production
+      previous_image_tag:
+        description: Previous Docker image tag to restore.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  rollback:
+    environment: ${{ inputs.environment }}
+    uses: ./.github/workflows/reusable-argocd.yml
+    with:
+      gitops_repo_url: ${{ vars.GITOPS_REPOSITORY }}
+      gitops_branch: ${{ vars.GITOPS_BRANCH }}
+      manifest_path: ${{ vars.GITOPS_MANIFEST_PATH }}
+      image_tag: ${{ inputs.previous_image_tag }}
+      argocd_server: ${{ vars.ARGOCD_SERVER }}
+      argocd_app_name: ${{ vars.ARGOCD_APP_NAME }}
+    secrets: inherit

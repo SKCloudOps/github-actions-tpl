@@ -1,0 +1,100 @@
+name: Reusable Build
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: Application language to build.
+        required: true
+        type: string
+      working_directory:
+        description: Relative path to the application root.
+        required: false
+        default: "."
+        type: string
+      java_version:
+        description: Java version for Spring Boot builds.
+        required: false
+        default: "21"
+        type: string
+      node_version:
+        description: Node.js version for React builds.
+        required: false
+        default: "20"
+        type: string
+      artifact_name:
+        description: Artifact name to upload.
+        required: false
+        default: "build-artifact"
+        type: string
+      artifact_path:
+        description: Path to package as a workflow artifact.
+        required: false
+        default: ""
+        type: string
+    outputs:
+      artifact_name:
+        description: Uploaded artifact name.
+        value: ${{ jobs.build.outputs.artifact_name }}
+      artifact_path:
+        description: Uploaded artifact path.
+        value: ${{ jobs.build.outputs.artifact_path }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.meta.outputs.artifact_name }}
+      artifact_path: ${{ steps.meta.outputs.artifact_path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        if: ${{ inputs.language == 'java' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+          cache: maven
+
+      - name: Setup Node
+        if: ${{ inputs.language == 'react' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working_directory }}/package-lock.json
+
+      - name: Build
+        shell: bash
+        run: |
+          bash "${GITHUB_WORKSPACE}/scripts/build.sh" "${{ inputs.language }}" "${{ inputs.working_directory }}"
+
+      - name: Set artifact metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ -n "${{ inputs.artifact_path }}" ]]; then
+            printf 'artifact_name=%s\n' "${{ inputs.artifact_name }}" >> "${GITHUB_OUTPUT}"
+            printf 'artifact_path=%s\n' "${{ inputs.artifact_path }}" >> "${GITHUB_OUTPUT}"
+          else
+            printf 'artifact_name=%s\n' "${{ inputs.artifact_name }}" >> "${GITHUB_OUTPUT}"
+            printf 'artifact_path=%s\n' "." >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Upload artifact
+        if: ${{ inputs.artifact_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.artifact_path }}
+          if-no-files-found: error
+          retention-days: 14
+

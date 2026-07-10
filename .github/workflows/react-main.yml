@@ -1,0 +1,82 @@
+name: React Main
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: react-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      language: react
+      working_directory: .
+      node_version: "20"
+      artifact_path: build
+    secrets: inherit
+
+  security:
+    needs: build
+    uses: ./.github/workflows/reusable-security.yml
+    with:
+      language: react
+      working_directory: .
+      scan_target: .
+      sonar_host_url: ${{ vars.SONAR_HOST_URL }}
+      sonar_project_key: ${{ vars.SONAR_PROJECT_KEY }}
+      checkmarx_project_name: ${{ vars.CHECKMARX_PROJECT_NAME }}
+    secrets: inherit
+
+  deploy:
+    needs: [build, security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+          path: build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Upload to S3
+        shell: bash
+        run: |
+          aws s3 sync build "s3://${{ vars.S3_BUCKET }}" --delete
+
+      - name: CloudFront invalidation
+        shell: bash
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
+
+  notify:
+    needs: deploy
+    uses: ./.github/workflows/reusable-notification.yml
+    with:
+      message: React production deployment completed for ${{ github.sha }}
+      status: success
+      slack_channel: ${{ vars.SLACK_CHANNEL }}
+    secrets: inherit

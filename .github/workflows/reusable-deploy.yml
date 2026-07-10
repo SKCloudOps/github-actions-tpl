@@ -1,0 +1,75 @@
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment name.
+        required: true
+        type: string
+      aws_region:
+        description: AWS region.
+        required: true
+        type: string
+      role_arn:
+        description: IAM role ARN.
+        required: true
+        type: string
+      eks_cluster_name:
+        description: EKS cluster name.
+        required: true
+        type: string
+      namespace:
+        description: Kubernetes namespace.
+        required: true
+        type: string
+      helm_release_name:
+        description: Helm release name.
+        required: true
+        type: string
+      helm_chart_path:
+        description: Helm chart path.
+        required: true
+        type: string
+      values_file:
+        description: Helm values file.
+        required: false
+        default: values.yaml
+        type: string
+      image_tag:
+        description: Image tag to deploy.
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.role_arn }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Update kubeconfig
+        shell: bash
+        run: aws eks update-kubeconfig --name "${{ inputs.eks_cluster_name }}" --region "${{ inputs.aws_region }}"
+
+      - name: Helm deploy
+        shell: bash
+        env:
+          K8S_NAMESPACE: ${{ inputs.namespace }}
+          HELM_RELEASE_NAME: ${{ inputs.helm_release_name }}
+          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
+          VALUES_FILE: ${{ inputs.values_file }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: bash scripts/deploy.sh

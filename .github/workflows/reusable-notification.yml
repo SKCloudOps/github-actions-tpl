@@ -1,0 +1,50 @@
+name: Reusable Notification
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: Notification message.
+        required: true
+        type: string
+      status:
+        description: Pipeline status text.
+        required: false
+        default: success
+        type: string
+      slack_channel:
+        description: Slack channel name.
+        required: false
+        default: ""
+        type: string
+    secrets:
+      slack_webhook_url:
+        required: false
+      teams_webhook_url:
+        required: false
+
+jobs:
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Slack
+        if: ${{ secrets.slack_webhook_url != '' }}
+        uses: ./actions/slack
+        with:
+          webhook_url: ${{ secrets.slack_webhook_url }}
+          channel: ${{ inputs.slack_channel }}
+          message: ${{ inputs.message }}
+          status: ${{ inputs.status }}
+
+      - name: Teams
+        if: ${{ secrets.teams_webhook_url != '' }}
+        uses: ./actions/teams
+        with:
+          webhook_url: ${{ secrets.teams_webhook_url }}
+          message: ${{ inputs.message }}
+          status: ${{ inputs.status }}
+

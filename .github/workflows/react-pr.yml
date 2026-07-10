@@ -1,0 +1,40 @@
+name: React PR
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: react-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      language: react
+      working_directory: .
+      node_version: "20"
+      artifact_path: build
+    secrets: inherit
+
+  security:
+    needs: build
+    uses: ./.github/workflows/reusable-security.yml
+    with:
+      language: react
+      working_directory: .
+      scan_target: .
+      sonar_host_url: ${{ vars.SONAR_HOST_URL }}
+      sonar_project_key: ${{ vars.SONAR_PROJECT_KEY }}
+      checkmarx_project_name: ${{ vars.CHECKMARX_PROJECT_NAME }}
+    secrets: inherit
+

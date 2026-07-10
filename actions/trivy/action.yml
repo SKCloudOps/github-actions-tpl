@@ -1,0 +1,40 @@
+name: Trivy Scan
+description: Run filesystem or image vulnerability scans with Trivy.
+inputs:
+  scan_type:
+    description: `fs` or `image`.
+    required: true
+  scan_target:
+    description: File system path or image reference.
+    required: true
+  severity:
+    description: Severity threshold list.
+    required: false
+    default: CRITICAL,HIGH
+runs:
+  using: composite
+  steps:
+    - name: Scan filesystem
+      if: ${{ inputs.scan_type == 'fs' }}
+      uses: aquasecurity/trivy-action@0.28.0
+      with:
+        scan-type: fs
+        scan-ref: ${{ inputs.scan_target }}
+        format: sarif
+        output: trivy.sarif
+        severity: ${{ inputs.severity }}
+        exit-code: "1"
+        ignore-unfixed: true
+
+    - name: Scan image
+      if: ${{ inputs.scan_type == 'image' }}
+      uses: aquasecurity/trivy-action@0.28.0
+      with:
+        scan-type: image
+        image-ref: ${{ inputs.scan_target }}
+        format: sarif
+        output: trivy.sarif
+        severity: ${{ inputs.severity }}
+        exit-code: "1"
+        ignore-unfixed: true
+

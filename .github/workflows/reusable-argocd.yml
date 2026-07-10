@@ -1,0 +1,75 @@
+name: Reusable ArgoCD
+
+on:
+  workflow_call:
+    inputs:
+      gitops_repo_url:
+        description: GitOps repository URL.
+        required: true
+        type: string
+      gitops_branch:
+        description: GitOps branch.
+        required: false
+        default: main
+        type: string
+      manifest_path:
+        description: Relative path to the manifest that contains the image tag.
+        required: true
+        type: string
+      image_tag:
+        description: New image tag to promote.
+        required: true
+        type: string
+      argocd_server:
+        description: ArgoCD server host.
+        required: true
+        type: string
+      argocd_app_name:
+        description: ArgoCD application name.
+        required: true
+        type: string
+    secrets:
+      gitops_token:
+        required: true
+      argocd_token:
+        required: true
+
+jobs:
+  update:
+    name: Update GitOps
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout application
+        uses: actions/checkout@v4
+
+      - name: Update GitOps manifest
+        shell: bash
+        env:
+          WORKDIR: ${{ github.workspace }}/gitops
+          GITOPS_REPO_URL: ${{ inputs.gitops_repo_url }}
+          GITOPS_BRANCH: ${{ inputs.gitops_branch }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          MANIFEST_PATH: ${{ inputs.manifest_path }}
+          GIT_TERMINAL_PROMPT: "0"
+          GIT_ASKPASS: echo
+          GITOPS_TOKEN: ${{ secrets.gitops_token }}
+        run: bash scripts/update-gitops.sh
+
+      - name: Trigger ArgoCD sync
+        shell: bash
+        env:
+          ARGOCD_SERVER: ${{ inputs.argocd_server }}
+          ARGOCD_APP_NAME: ${{ inputs.argocd_app_name }}
+          ARGOCD_TOKEN: ${{ secrets.argocd_token }}
+        run: |
+          server="${ARGOCD_SERVER#https://}"
+          server="${server#http://}"
+          curl -fsS \
+            -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            "https://${server}/api/v1/applications/${ARGOCD_APP_NAME}/sync" \
+            -d '{"prune":true,"dryRun":false}'

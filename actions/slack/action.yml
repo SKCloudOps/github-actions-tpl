@@ -1,0 +1,28 @@
+name: Slack Notify
+description: Send a Slack message through an incoming webhook.
+inputs:
+  webhook_url:
+    description: Slack webhook URL.
+    required: true
+  channel:
+    description: Slack channel name.
+    required: false
+    default: ""
+  message:
+    description: Notification message.
+    required: true
+  status:
+    description: Pipeline status.
+    required: false
+    default: success
+runs:
+  using: composite
+  steps:
+    - name: Send Slack notification
+      uses: slackapi/slack-github-action@v1.27.0
+      with:
+        webhook: ${{ inputs.webhook_url }}
+        webhook-type: incoming-webhook
+        payload: >-
+          {"text":"[${{ inputs.status }}] ${{ inputs.message }}","channel":"${{ inputs.channel }}"}
+

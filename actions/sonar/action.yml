@@ -1,0 +1,39 @@
+name: SonarQube Scan
+description: Run SonarQube analysis and quality gate verification.
+inputs:
+  sonar_host_url:
+    description: SonarQube server URL.
+    required: true
+  sonar_token:
+    description: SonarQube token.
+    required: true
+  project_key:
+    description: Sonar project key.
+    required: true
+  project_base_dir:
+    description: Project base directory.
+    required: false
+    default: "."
+  additional_args:
+    description: Extra scanner arguments.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Run Sonar scanner
+      uses: SonarSource/sonarqube-scan-action@v6.0.0
+      with:
+        args: >-
+          -Dsonar.projectKey=${{ inputs.project_key }}
+          -Dsonar.projectBaseDir=${{ inputs.project_base_dir }}
+          ${{ inputs.additional_args }}
+      env:
+        SONAR_HOST_URL: ${{ inputs.sonar_host_url }}
+        SONAR_TOKEN: ${{ inputs.sonar_token }}
+
+    - name: Wait for quality gate
+      uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar_token }}
+

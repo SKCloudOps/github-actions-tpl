@@ -1,0 +1,24 @@
+name: Teams Notify
+description: Send a Microsoft Teams notification through an incoming webhook.
+inputs:
+  webhook_url:
+    description: Teams webhook URL.
+    required: true
+  message:
+    description: Notification message.
+    required: true
+  status:
+    description: Pipeline status.
+    required: false
+    default: success
+runs:
+  using: composite
+  steps:
+    - name: Send Teams notification
+      shell: bash
+      run: |
+        curl -fsS \
+          -H "Content-Type: application/json" \
+          -d "{\"text\":\"[${{ inputs.status }}] ${{ inputs.message }}\"}" \
+          "${{ inputs.webhook_url }}"
+

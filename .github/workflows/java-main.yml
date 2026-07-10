@@ -1,0 +1,80 @@
+name: Java Main
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Override image tag.
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+concurrency:
+  group: java-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      language: java
+      working_directory: .
+      java_version: "21"
+      artifact_path: target
+    secrets: inherit
+
+  security:
+    needs: build
+    uses: ./.github/workflows/reusable-security.yml
+    with:
+      language: java
+      working_directory: .
+      image_ref: ${{ vars.ECR_IMAGE_URI }}
+      scan_target: .
+      sonar_host_url: ${{ vars.SONAR_HOST_URL }}
+      sonar_project_key: ${{ vars.SONAR_PROJECT_KEY }}
+      checkmarx_project_name: ${{ vars.CHECKMARX_PROJECT_NAME }}
+    secrets: inherit
+
+  ecr_login:
+    needs: [build, security]
+    uses: ./.github/workflows/reusable-ecr.yml
+    with:
+      aws_region: ${{ vars.AWS_REGION }}
+      role_arn: ${{ vars.AWS_ROLE_ARN }}
+      account_id: ${{ vars.AWS_ACCOUNT_ID }}
+    secrets: inherit
+
+  docker:
+    needs: [build, security, ecr_login]
+    uses: ./.github/workflows/reusable-docker.yml
+    with:
+      aws_region: ${{ vars.AWS_REGION }}
+      role_arn: ${{ vars.AWS_ROLE_ARN }}
+      image_uri: ${{ needs.ecr_login.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' && inputs.image_tag || github.sha }}
+      context: .
+      dockerfile: docker/spring-boot.Dockerfile
+      download_artifact_name: build-artifact
+      download_artifact_path: target
+      push: true
+    secrets: inherit
+
+  gitops:
+    needs: docker
+    uses: ./.github/workflows/reusable-argocd.yml
+    with:
+      gitops_repo_url: ${{ vars.GITOPS_REPOSITORY }}
+      gitops_branch: ${{ vars.GITOPS_BRANCH }}
+      manifest_path: environments/production/<APP_NAME>/values.yaml
+      image_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' && inputs.image_tag || github.sha }}
+      argocd_server: ${{ vars.ARGOCD_SERVER }}
+      argocd_app_name: ${{ vars.ARGOCD_APP_NAME }}
+    secrets: inherit
